@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{ basicindex.title }}</title>
+</head>
+<body>
+	<h1>{{ basicindex.h1}}</h1>
+
+	<form enctype="multipart/form-data"
+	      action="/basic/uploadFile/" method="POST">
+
+		<input type="file" name="upload_file">
+		<br/>
+		<input type="text" name="cloud_path" value="{{ HOME }}"/>
+		<br/>
+		<select name="select_dir" onchange="select_directory(this.options[this.options.selectedIndex].value);">
+			{% for dir in dirs %}
+				<option>{{ dir }}</option>
+			{% endfor %}
+		</select>
+		<script type="text/javascript">
+			function select_directory(_value){
+				// alert("select => " + _value);
+				var xmlh_select_dir;
+				if (window.XMLHttpRequest) { //  IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+				    xmlh_select_dir=new XMLHttpRequest();
+				}else{ // IE6, IE5 浏览器执行代码
+				    xmlh_select_dir=new ActiveXObject("Microsoft.XMLHTTP");
+				}
+
+				xmlh_select_dir.open("POST", "/basic/select_dir/", true);
+				xmlh_select_dir.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+				xmlh_select_dir.send("folder=" + _value +
+					"&last_path=" + document.getElementsByName("cloud_path")[0].value +
+					"&csrfmiddlewaretoken=" + document.getElementsByName("csrfmiddlewaretoken")[0].value
+					);
+				var cloud_platform = "linux";
+				var path_symbol = '';
+				xmlh_select_dir.onreadystatechange=function(){
+					if (xmlh_select_dir.readyState==4 && xmlh_select_dir.status==200){
+						if (cloud_platform == "linux"){
+							path_symbol = '/';
+						}
+						document.getElementsByName("cloud_path")[0].value += path_symbol + _value;
+						xmlhttp_recv = xmlh_select_dir.responseText;
+						jsonObj = JSON.parse(xmlhttp_recv);
+						// jsonObj.sub_dirs => list
+						refresh_sub_select_dir(jsonObj.sub_dirs);
+					}
+				}
+			}
+
+			function refresh_sub_select_dir(sub_dirs_list){
+				var arr = new Array();
+				var all_options = "";
+				for (var i = 0; i<sub_dirs_list.length; i++){
+					all_options += "<option>" + sub_dirs_list[i] + "</option>"
+				}
+				console.log(all_options);
+				document.getElementsByName("select_dir")[0].innerHTML = all_options;
+			}
+		</script>
+		<br/>
+		<input type="submit" name="btn_upload" value="上传">
+
+		{% csrf_token %}
+	</form>
+</body>
+</html>
