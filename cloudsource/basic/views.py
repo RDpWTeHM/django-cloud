@@ -3,6 +3,8 @@ from django.shortcuts import render
 # Create your views here.
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.http import FileResponse
+
 import os
 import sys
 
@@ -23,12 +25,14 @@ def index(request):
     files = os.listdir(last_dir)
     dirs = [file for file in files if os.path.isdir(os.path.join(last_dir, file))]
 
+    filesnames = [file for file in files if os.path.isfile(os.path.join(last_dir, file))]
     # don't display hidden folder
     dirs = [dir for dir in dirs if not dir.startswith(".")]
     return render(request, "basic/index.html",
                   {"basicindex": basicindex,
                    'HOME': HOME,
                    'dirs': dirs,
+                   'name_of_files': filesnames,
                    })
 
 
@@ -40,9 +44,12 @@ def select_dir(request):
         last_path = os.path.join(last_path, selected_folder)
         files = os.listdir(last_path)
         dirs = [file for file in files if os.path.isdir(os.path.join(last_path, file))]
+        filesnames = [file for file in files if os.path.isfile(os.path.join(last_path, file))]
         # if __debug__:
         #     print(dirs, file=sys.stderr)
-        return HttpResponse(json.dumps({'sub_dirs': dirs}))
+        return HttpResponse(json.dumps({
+            'sub_dirs': dirs,
+            'sub_files': filesnames, }))
     else:
         redirect("/basic/")
 
@@ -64,3 +71,13 @@ def upload(request):
 
     else:
         return redirect("/basic/")
+
+
+def download(request):
+    # HOME = os.environ.get("HOME", None)
+    fullpath_file = request.GET["fullpath"]
+    file = open(fullpath_file, 'rb')
+    response = FileResponse(file)
+    response['Content-type'] = 'application/octet-stream'
+    response['Content-Disposition'] = 'attachment;filename="%s"' % (os.path.split(fullpath_file)[1])
+    return response
