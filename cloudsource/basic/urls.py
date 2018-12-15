@@ -9,4 +9,6 @@ urlpatterns = [
     path("select_dir/", views.select_dir, name="selectdir"),
 
     path("downloadFile/", views.download, name='download'),
+
+    # path("static_for_test_html_js/", views.front_test, name="front_test"),
 ]

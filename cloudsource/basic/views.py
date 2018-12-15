@@ -10,6 +10,8 @@ import sys
 
 import json
 
+from django.utils.datastructures import MultiValueDictKeyError
+
 
 class BasicIndex(object):
     title = "httpserver-cloud | basic"
@@ -74,10 +76,17 @@ def upload(request):
 
 
 def download(request):
-    # HOME = os.environ.get("HOME", None)
-    fullpath_file = request.GET["fullpath"]
-    file = open(fullpath_file, 'rb')
-    response = FileResponse(file)
-    response['Content-type'] = 'application/octet-stream'
-    response['Content-Disposition'] = 'attachment;filename="%s"' % (os.path.split(fullpath_file)[1])
-    return response
+    if request.method == "GET":
+        try:
+            # HOME = os.environ.get("HOME", None)
+            fullpath_file = request.GET["fullpath"]
+            fullpath_file = os.path.join(fullpath_file, request.GET['filename'])
+            if __debug__:
+                print("download: fullpath_file > ", fullpath_file, file=sys.stderr)
+            file = open(fullpath_file, 'rb')
+            response = FileResponse(file)
+            response['Content-type'] = 'application/octet-stream'
+            response['Content-Disposition'] = 'attachment;filename="%s"' % (os.path.split(fullpath_file)[1])
+            return response
+        except MultiValueDictKeyError:
+            HttpResponse("GET value error")

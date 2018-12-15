@@ -2,12 +2,14 @@
 <html>
 <head>
 	<title>{{ basicindex.title }}</title>
+	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
 </head>
 <body>
 	<h1>{{ basicindex.h1}}</h1>
 
 	<form enctype="multipart/form-data"
-	      action="/basic/uploadFile/" method="POST">
+		  action="/basic/uploadFile/" method="POST">
+		  {% csrf_token %}
 		
 		<div>
 		<input type="text" name="cloud_path" value="{{ HOME }}"/>
@@ -28,11 +30,19 @@
 		<div>
 			<ul name="click_to_download_files">
 			{% for filename in name_of_files %}
-				<a href="{% url 'download' %}?fullpath={{filename}}"><li>{{ filename }}</li></a>
+				<a href="" onclick="download_file($(this).text())" ><li>{{ filename }}</li></a>
 			{% endfor %}
 			</ul>
 		</div>
-		{% csrf_token %}
+		<script type="text/javascript">
+			function download_file(filename){
+				alert("are you sure to download " + filename);
+				abs_path = document.getElementsByName("cloud_path")[0].value;
+				abs_path = abs_path.replace(/\//g, "%2F");
+				window.open("{% url 'download' %}?fullpath=" +
+				            abs_path + "&filename=" + filename);
+			}
+		</script>
 
 	<script type="text/javascript">
 		function select_directory(_value){
@@ -81,12 +91,10 @@
 		function refresh_sub_files_of_selected_dir(sub_files_list){
 			var arr = new Array();
 			var all_lis = "";
-			// catch download file URL
-			// -[o] joseph /\
 
 			for (var i = 0; i<sub_files_list.length; i++){
-				all_lis += "<a href=" + sub_files_list[i] + "><li>" +
-				           sub_files_list[i] + "</li></a>"
+				all_lis += "<a href=\"\" " + "onclick=\"download_file($(this).text())\" >" +
+						   "<li>" + sub_files_list[i] + "</li></a>"
 			}
 			document.getElementsByName("click_to_download_files")[0].innerHTML = all_lis;
 		}
@@ -94,3 +102,4 @@
 	</form>
 </body>
 </html>
+
