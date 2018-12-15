@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.http import FileResponse
 
+# fix Chinese filename download
+from django.utils.encoding import escape_uri_path
+
 import os
 import sys
 
@@ -86,7 +89,8 @@ def download(request):
             file = open(fullpath_file, 'rb')
             response = FileResponse(file)
             response['Content-type'] = 'application/octet-stream'
-            response['Content-Disposition'] = 'attachment;filename="%s"' % (os.path.split(fullpath_file)[1])
+            response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(
+                escape_uri_path(os.path.split(fullpath_file)[1]))
             return response
         except MultiValueDictKeyError:
             HttpResponse("GET value error")
